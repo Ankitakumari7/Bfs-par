@@ -1,0 +1,55 @@
+import queue
+import numpy as np
+import multiprocessing as mp
+
+MAXN = 1000000
+n, m = 0, 0
+adj = [[] for _ in range(MAXN)]
+
+def bfs(start):
+    q = queue.Queue()
+    visited = np.zeros(n + 1, dtype=bool)
+    visited[start] = True
+    q.put(start)
+
+    with mp.Pool() as pool:
+        while not q.empty():
+            cur = q.get()
+
+            next_nodes = adj[cur]
+            result = pool.map_async(explore, next_nodes)
+            for next_visited in result.get():
+                if not visited[next_visited]:
+                    visited[next_visited] = True
+                    q.put(next_visited)
+
+def explore(cur):
+    return cur
+
+def dfs(cur, visited):
+    visited[cur] = True
+
+    with mp.Pool() as pool:
+        next_nodes = adj[cur]
+        result = pool.map_async(process_node, next_nodes)
+        for next_node in result.get():
+            if not visited[next_node]:
+                dfs(next_node, visited)
+
+def process_node(cur):
+    return cur
+
+if __name__ == '__main__':
+    n, m = map(int, input().split())
+
+    for i in range(m):
+        u, v = map(int, input().split())
+        adj[u].append(v)
+        adj[v].append(u)
+
+    # BFS from node 1
+    bfs(1)
+
+    # DFS from node 1
+    visited = np.zeros(n + 1, dtype=bool)
+    dfs(1, visited)
